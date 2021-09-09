@@ -5,22 +5,31 @@ import { useLocation, useParams } from 'react-router-dom';
 import React from 'react';
 import { Page } from './Page';
 import { QuestionList } from '../Components/QuestionList';
-import { QuestionData, searchQuestions } from '../Components/QuestionsData';
+import { searchQuestions } from '../Components/QuestionsData';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  AppState,
+  searchingQuestionsAction,
+  searchedQuestionsAction,
+} from '../Store';
 
 export const SearchPage = () => {
+  const dispatch = useDispatch();
+  const questions = useSelector((state: AppState) => state.questions.searched);
   // Get the search parameters in the URL
   const SearchParams = () => {
     return new URLSearchParams(useLocation().search);
   };
-  const [questions, setQuestions] = React.useState<QuestionData[]>([]);
   const search = SearchParams().get('criteria') || '';
 
   React.useEffect(() => {
     const doSearch = async (criteria: string) => {
+      dispatch(searchingQuestionsAction());
       const foundResults = await searchQuestions(criteria);
-      setQuestions(foundResults);
+      dispatch(searchedQuestionsAction(foundResults));
     };
     doSearch(search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   return (
