@@ -2,26 +2,36 @@
 import { css } from '@emotion/react';
 import React from 'react';
 import { QuestionList } from '../Components/QuestionList';
-import {
-  getUnansweredQuestions,
-  QuestionData,
-} from '../Components/QuestionsData';
+import { getUnansweredQuestions } from '../Components/QuestionsData';
 import { Page } from './Page';
 import { PageTitle } from './PageTitle';
 import { PrimaryButton } from '../CSS/Styles';
 import { useHistory } from 'react-router-dom';
+import {
+  gettingUnansweredQuestionsAction,
+  gotUnansweredQuestionsAction,
+  AppState,
+} from '../Store';
+import { useSelector, useDispatch } from 'react-redux';
+import { disposeEmitNodes } from 'typescript';
 
 export const HomePage = () => {
-  const [questions, setQuestions] = React.useState<QuestionData[]>([]);
-  const [questionsLoading, setQuestionsLoading] = React.useState(true);
+  const dispatch = useDispatch();
+  const questions = useSelector(
+    (state: AppState) => state.questions.unanswered,
+  );
+  const questionsLoading = useSelector(
+    (state: AppState) => state.questions.loading,
+  );
 
   React.useEffect(() => {
     const doGetUnansweredQuestions = async () => {
+      dispatch(gettingUnansweredQuestionsAction());
       const unansweredQuestions = await getUnansweredQuestions();
-      setQuestions(unansweredQuestions);
-      setQuestionsLoading(false);
+      dispatch(gotUnansweredQuestionsAction(unansweredQuestions));
     };
     doGetUnansweredQuestions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const history = useHistory();
