@@ -18,7 +18,7 @@ namespace QandA.Data
             "SELECT @QuestionId, @Content, @UserId, @UserName, @Created " +
             "SELECT AnswerId, Content, UserName, UserId, Created " +
             "FROM dbo.Answer " +
-            "WHERE AnswerId = @AnswerId;";
+            "WHERE AnswerId = SCOPE_IDENTITY();";
 
         public static readonly string AnswerPutQuery =
             "UPDATE Answer " +
@@ -45,7 +45,7 @@ namespace QandA.Data
             "SELECT CASE WHEN EXISTS (SELECT QuestionId " +
             "FROM dbo.Question " +
             "WHERE QuestionId = @QuestionId) " +
-            "THEN CAST(1 AS BIT " +
+            "THEN CAST(1 AS BIT) " +
             "ELSE CAST(0 AS BIT) END AS Result;";
 
         public static readonly string QuestionGetManyBySearchQuery =
