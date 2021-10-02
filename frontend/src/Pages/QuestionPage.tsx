@@ -22,6 +22,11 @@ import {
 } from '../Components/QuestionsData';
 import { AnswerList } from '../Components/AnswerList';
 import { useForm } from 'react-hook-form';
+import {
+  HubConnectionBuilder,
+  HubConnectionState,
+  HubConnection,
+} from '@aspnet/signalr';
 
 type FormData = {
   content: string;
@@ -39,6 +44,64 @@ export const QuestionPage = () => {
   } = useForm<FormData>({ mode: 'onBlur' });
 
   const [question, setQuestion] = React.useState<QuestionData | null>(null);
+
+  // method to setup a SignalR connection
+  const setUpSignalRConnection = async (questionId: number) => {
+    // TODO - setup connection to real-time SignalR API
+    const connection = new HubConnectionBuilder()
+      .withUrl('https://localhost:44354/questionshub')
+      .withAutomaticReconnect()
+      .build();
+    // TODO - handle Message function being called
+    connection.on('Message', (message: string) => {
+      console.log('Message', message);
+    });
+    // TODO - handle ReceiveQuestion function being called
+    connection.on('ReceiveQuestion', (question: QuestionData) => {
+      console.log('ReceiveQuestion', question);
+      setQuestion(question);
+    });
+    // TODO - start the connection
+    try {
+      await connection.start();
+    } catch (err) {
+      console.log(err);
+    }
+    // TODO - subscribe to question
+    if (connection.state === HubConnectionState.Connected) {
+      connection
+        .invoke('SubscribeQuestion', Number(questionId))
+        .catch((err: Error) => {
+          return console.error(err.toString());
+        });
+    }
+    // TODO - return the connection
+    return connection;
+  };
+
+  // method to clean up SignalR connection
+  const cleanUpSignalRConnection = async (
+    questionId: number,
+    connection: HubConnection,
+  ) => {
+    // TODO - unsubscribe from the question
+    if (connection.state === HubConnectionState.Connected) {
+      try {
+        await connection.invoke('UnsubscribeQuestion', Number(questionId));
+      } catch (err) {
+        return console.log('error');
+      }
+      connection.off('Message');
+      connection.off('ReceiveQuestion');
+      connection.stop();
+    } else {
+      // TODO - stop the connection
+      connection.off('Message');
+      connection.off('ReceiveQuestion');
+      connection.stop();
+    }
+  };
+
   const { questionId }: any = useParams();
 
   const doGetQuestion = async (questionId: number) => {
@@ -47,9 +110,19 @@ export const QuestionPage = () => {
   };
 
   React.useEffect(() => {
+    let connection: HubConnection;
     if (questionId) {
       doGetQuestion(Number(questionId));
+      setUpSignalRConnection(questionId).then((con) => {
+        connection = con;
+      });
     }
+
+    return function cleanUp() {
+      if (questionId) {
+        cleanUpSignalRConnection(Number(questionId), connection);
+      }
+    };
   }, [questionId]);
 
   const submitForm = async (data: FormData) => {
