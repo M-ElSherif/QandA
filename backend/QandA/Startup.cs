@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DbUp;
+using QandA.Hubs;
 
 namespace QandA
 {
@@ -49,11 +50,23 @@ namespace QandA
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "QandA", Version = "v1" });
             });
             services.AddScoped<IDataRepository, DataRepository>();
+
+            services.AddCors(options =>
+                options.AddPolicy("CorsPolicy", builder =>
+                    builder.AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .WithOrigins("http://localhost:3000")
+                        .AllowCredentials()));
+
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+         
+            app.UseCors("CorsPolicy");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -72,6 +85,7 @@ namespace QandA
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<QuestionsHub>("/questionshub");
             });
         }
     }

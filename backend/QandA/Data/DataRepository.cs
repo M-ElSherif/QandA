@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -45,6 +46,22 @@ namespace QandA
             {
                 connection.Open();
                 return connection.Query<QuestionGetManyResponse>(DatabaseQuery.QuestionGetUnansweredQuery);
+            }
+        }
+
+        public IEnumerable<QuestionGetManyResponse> GetQuestionsWithAnswers()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var questions = connection.Query<QuestionGetManyResponse>(DatabaseQuery.QuestionGetManyQuery);
+                foreach (var question in questions)
+                {
+                    question.Answers = connection.Query<AnswerGetResponse>(DatabaseQuery.AnswerGetByQuestionIdQuery,
+                        new { QuestionId = question.QuestionId }).ToList();
+                }
+                return questions;
             }
         }
 
