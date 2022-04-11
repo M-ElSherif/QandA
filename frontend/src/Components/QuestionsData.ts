@@ -13,6 +13,22 @@ export interface AnswerData {
   created: Date;
 }
 
+export interface QuestionDataFromServer {
+  questionId: number;
+  title: string;
+  content: string;
+  userName: string;
+  created: string;
+  answers: AnswerDataFromServer[];
+}
+
+export interface AnswerDataFromServer {
+  answerId: number;
+  content: string;
+  userName: string;
+  created: string;
+}
+
 export interface PostQuestionData {
   title: string;
   content: string;
@@ -26,6 +42,17 @@ export interface PostAnswerData {
   userName: string;
   created: Date;
 }
+
+export const mapQuestionFromServer = (
+  question: QuestionDataFromServer,
+): QuestionData => ({
+  ...question,
+  created: new Date(question.created.substr(0.19)),
+  answers: question.answers.map((answer) => ({
+    ...answer,
+    created: new Date(answer.created.substr(0, 19)),
+  })),
+});
 
 const questions: QuestionData[] = [
   {
