@@ -19,6 +19,8 @@ import {
   getQuestion,
   postAnswer,
   QuestionData,
+  mapQuestionFromServer,
+  QuestionDataFromServer,
 } from '../Components/QuestionsData';
 import { AnswerList } from '../Components/AnswerList';
 import { useForm } from 'react-hook-form';
@@ -57,9 +59,9 @@ export const QuestionPage = () => {
       console.log('Message', message);
     });
     // TODO - handle ReceiveQuestion function being called
-    connection.on('ReceiveQuestion', (question: QuestionData) => {
+    connection.on('ReceiveQuestion', (question: QuestionDataFromServer) => {
       console.log('ReceiveQuestion', question);
-      setQuestion(question);
+      setQuestion(mapQuestionFromServer(question));
     });
     // TODO - start the connection
     try {
